@@ -9,6 +9,8 @@ global curr_r
 
 global distractor_mode
 
+global questions;
+
 
 # check line 291915, 280421
 
@@ -33,7 +35,7 @@ def fill_in(ws1, ws2, start_r, end_r, ref_r, attempt):
     curr_r = end_r
 
 
-def collect_ans(ws1,AnsDict,mr):
+def collect_ans(ws1,AnsDict):
 
     #answer
     (AnsDict['exp1_q5_pp'])[0] = ['0_0','1_1','2_1','3_4_2','7_2','9_2','10_1']
@@ -63,11 +65,6 @@ def collect_ans(ws1,AnsDict,mr):
 
 
 def find_changes(last, curr, probname, line):
-##    line = last + 1
-##    while (str(ws1.cell(row = i, column = 6).value) == probname) and (str(ws1.cell(row = i, column = 4).value) == 'parsonsMove') and line < curr:
-##        content = ws1.cell(row = i, column = 5).value
-##        typ,le,ri,c = content.split('|')
-##        if typ == 'move':
     changes = []
     deleted = []
     res = []
@@ -122,8 +119,6 @@ def get_attempt(c,line,ws1):
         l = line-1
         while str(ws1.cell(row = l, column = 4).value) != 'parsonsMove' and str(ws1.cell(row = l, column = 4).value) != 'parsons':
             l = l-1
-        if line == 254503:
-            print(l)
         content_prev = ws1.cell(row = l, column = 5).value
         typ2,le2,ri2,c2 = content_prev.split('|')
         res2 = c2.split('-')
@@ -167,32 +162,9 @@ def add_KC(initial, ans_tmp):
 
 
     
-def data(filename, output, dismode=True):
-    source = openpyxl.load_workbook(filename)
-    ws1 = source.active
-    out = openpyxl.load_workbook(output)
-    ws2 = out.active
-    wb = Workbook()
-    tmp = wb.active
+def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
     global distractor_mode
     distractor_mode = dismode
-    
-
-    #find someway to filter ws1
-    filter_id= ['Total_Dict_Values_PP', 'exp1_q5_pp','exp1_pp1a','Count_Target_In_Range_Order']
-    ws1.auto_filter.ref = "A0:J297132" 
-    ws1.auto_filter.add_filter_column(6, filter_id);
-    ws1.auto_filter.add_filter_column(4, ['parsons']);
-    #ws1 = ws1[((ws1['div_id'] == 'exp1_q5_pp') | (ws1['div_id'] == 'exp1_pp1a') | (ws1['div_id'] == 'Count_Target_In_Range_Order')|(ws1['div_id'] == 'Total_Dict_Values_PP'))&(ws1['event'] == 'parsons')]
-
-
-
-    AnsDict = {'exp1_q5_pp':[[],[],[]],
-               'exp1_pp1a':[[],[],[]],
-               'Count_Target_In_Range_Order': [[],[],[]],
-               'Total_Dict_Values_PP': [[],[],[]],
-               'exp1_pp3':[[],[],[]]}
-
                
 
     mr = ws1.max_row
@@ -210,22 +182,16 @@ def data(filename, output, dismode=True):
     ws2["K1"] = "reference line"
     ws2["L1"] = "should be"
 
-    AnsDict = collect_ans(ws1, AnsDict, mr)
                 
     r = 2;
     last_attempt = []
     correct = False;
 
-
-    questions = list(AnsDict.keys())
+        
 
     
     for i in range(2, mr+1):
-        if (str(ws1.cell(row = i, column = 4).value) == 'parsons') and ((str(ws1.cell(row = i, column = 6).value) == 'Total_Dict_Values_PP')
-                        or (str(ws1.cell(row = i, column = 6).value) == 'exp1_q5_pp')
-                        or (str(ws1.cell(row = i, column = 6).value) == 'exp1_pp1a')
-                        or (str(ws1.cell(row = i, column = 6).value) == 'Count_Target_In_Range_Order')
-                        or (str(ws1.cell(row = i, column = 6).value) == 'exp1_pp3')):
+         if(str(ws1.cell(row = i, column = 4).value) == 'parsons') and ((str(ws1.cell(row = i, column = 6).value) in filt)):
             probname = ws1.cell(row = i, column = 6).value
             content = ws1.cell(row = i, column = 5).value
             typ,le,ri,c = content.split('|')
@@ -339,10 +305,30 @@ def data(filename, output, dismode=True):
             if(ws1.cell(row = i+1, column = 6).value != ws1.cell(row = i, column = 6).value):
                 last_attempt = []
 
-
     
     out.save(str(output))
 
+
+
+
+def init(filename, output, filt=[], dismode=True):
+    source = openpyxl.load_workbook(filename)
+    ws1 = source.active
+    out = openpyxl.load_workbook(output)
+    ws2 = out.active
+    AnsDict = {'exp1_q5_pp':[[],[],[]],
+               'exp1_pp1a':[[],[],[]],
+               'Count_Target_In_Range_Order': [[],[],[]],
+               'Total_Dict_Values_PP': [[],[],[]],
+               'exp1_pp3':[[],[],[]]}
+    AnsDict = collect_ans(ws1, AnsDict)
+    questions = list(AnsDict.keys())
+    if filt == []:
+        data(filename, output, AnsDict, ws1, ws2, out, questions, dismode)
+    else:
+        data(filename, output, AnsDict, ws1, ws2, out, filt, dismode)
+    
+        
 
 
     
