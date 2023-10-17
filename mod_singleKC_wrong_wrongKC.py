@@ -15,6 +15,7 @@ global questions;
 global empty;
 
 
+
 # check line 291915, 280421
 
 def fill_in(ws1, ws2, start_r, end_r, ref_r, attempt):
@@ -33,8 +34,12 @@ def fill_in(ws1, ws2, start_r, end_r, ref_r, attempt):
         ws2.cell(row = r, column = 13).value = 1
         # is last attempt
         ws2.cell(row = r, column = 8).value = 0
-        if(ws1.cell(row = ref_r+1, column = 6).value != ws1.cell(row = ref_r, column = 6).value):
+        nxt = 1
+        while ws1.cell(row = ref_r+nxt, column = 2).value != ws1.cell(row = ref_r, column = 2).value:
+            nxt = nxt + 1
+        if(ws1.cell(row = ref_r+nxt, column = 6).value != ws1.cell(row = ref_r, column = 6).value):
             ws2.cell(row = r, column = 8).value = 1
+            
 
     
 
@@ -52,11 +57,11 @@ def collect_ans(ws1,AnsDict):
     (AnsDict['exp1_pp1a'])[1] = ['2','5','7']
     (AnsDict['Count_Target_In_Range_Order'])[1] = ['2', '4', '6', '8','10']
     (AnsDict['Total_Dict_Values_PP'])[1] = ['1','4', '6']
-    (AnsDict['exp1_pp3'])[1] = ['1','6']
+    (AnsDict['exp1_pp3'])[1] = ['1','5']
 
-    #KC (if no corresponding kc, use '' as fill in
+    #KC 
     #Attribute: 
-    (AnsDict['exp1_q5_pp'])[2] = ['FunctionDef,args','Assign','For','Assign,get() function,Attribute,args','Assign,get() function,Attribute,args','Assign,BinOp,Add','append() function,Attribute,args','Return']
+    (AnsDict['exp1_q5_pp'])[2] = ['FunctionDef,args','Assign','For','Assign,get() function,Attribute,args','Assign,BinOp,Add','append() function,Attribute,args','Return']
     (AnsDict['exp1_pp1a'])[2] = ['FunctionDef,args','Assign','While,Comparison Operator < Less than,len() function,args','If Statement,BoolOp,And,Comparison Operator == Equal,Subscript','Return','Assignment Operator +=','Return']
     (AnsDict['Count_Target_In_Range_Order'])[2] = ['FunctionDef,args','Assign','For,range() function,args,BinOp,Add','Assign,Subscript','If Statement,Comparison Operator == Equal','Assign,BinOp,Add','Return']
     (AnsDict['Total_Dict_Values_PP'])[2] = ['FunctionDef,args','Assign','For','Assignment Operator +=,Subscript','Return']
@@ -66,8 +71,8 @@ def collect_ans(ws1,AnsDict):
     (AnsDict['exp1_q5_pp'])[3] = ['Assign,get() function,Attribute,args','Assign,get() function,Attribute,args','Assign,BinOp,Add']
     (AnsDict['exp1_pp1a'])[3] = ['Assign','If Statement,BoolOp,And,Comparison Operator == Equal,Subscript','Return']
     (AnsDict['Count_Target_In_Range_Order'])[3] = ['Assign', 'For,range() function,args,BinOp,Add', 'Assign,Subscript', 'If Statement,Comparison Operator == Equal','Assign,BinOp,Add']
-    (AnsDict['Total_Dict_Values_PP'])[3] = ['unctionDef,args','For', 'Assignment Operator +=, Subscript']
-    (AnsDict['exp1_pp3'])[3] = ['FunctionDef,args','Return,BinOp, Sub']
+    (AnsDict['Total_Dict_Values_PP'])[3] = ['FunctionDef,args','For', 'Assignment Operator +=, Subscript']
+    (AnsDict['exp1_pp3'])[3] = ['FunctionDef,args','Return,BinOp,Sub']
     
     return AnsDict
 
@@ -140,7 +145,6 @@ def get_attempt(c,line,ws1):
 
 
 def add_distractor(ans, curr, distractor):
-    # 1. find the block (no indentation) which is in distractor
     res = []
     for item in ans:
         res.append(item)
@@ -159,24 +163,44 @@ def add_distractor(ans, curr, distractor):
     return res
 
 
+def find_corres_KCs(block,probname,AnsDict):
+    blockNum = (block.split("_"))[0]
+    answer = AnsDict[probname][0]
+    distractors = AnsDict[probname][1]
+    KClist = AnsDict[probname][2]
+    KC_disList = AnsDict[probname][3]
+    for item in answer:
+        b = (item.split("_"))[0]
+        if b == blockNum:
+            i = answer.index(item)
+            KC = KClist[i]
+            return KC
+    if blockNum in distractors:
+        inx = distractors.index(blockNum)
+        KC = KC_disList[inx]
+        return KC
+    return ""
+        
+
 
 def add_KC(initial, ans_tmp, KC_distractor, distractorlist):
     res = []
     for item in initial:
         res.append(item)
-    for string in ans_tmp:
-        if string[0] == 'd' and distractor_mode == True:
+    for i in range(0, len(ans_tmp)):
+        string = ans_tmp[i]
+        if string[0] == 'd':
             distractor = (string.split())[1]
             inx = distractorlist.index(distractor)
             res.insert(ans_tmp.index(string), KC_distractor[inx])
-        if string[0] == 'e' and distractor_mode == False:
+        if string[0] == 'e':
             distractor = (string.split())[1]
             inx = distractorlist.index(distractor)
             res.append(KC_distractor[inx])
     return res
             
 
-def split_KCs(start_r, end_r, ws2, KClist, dist):
+def split_KCs(start_r, end_r, ws2, KClist,dist):
     for i in range(start_r, end_r):
         ws2.cell(row = i, column = 10).value = ws2.cell(row = start_r, column = 10).value
         ws2.cell(row = i, column = 11).value = ws2.cell(row = start_r, column = 11).value
@@ -186,11 +210,15 @@ def split_KCs(start_r, end_r, ws2, KClist, dist):
             ws2.cell(row = i, column = 6).value = KClist[i-start_r]
         ws2.cell(row = i, column = 12).value = KClist[i-start_r]
     
+
+
+
     
-    
-def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
+def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True, distVerb=False):
     global distractor_mode
     distractor_mode = dismode
+    global last_attempt;
+    distV = distVerb
                
 
     mr = ws1.max_row
@@ -221,6 +249,8 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
     
     for i in range(2, mr+1):
          if(str(ws1.cell(row = i, column = 4).value) == 'parsons') and ((str(ws1.cell(row = i, column = 6).value) in filt)):
+
+             
             probname = ws1.cell(row = i, column = 6).value
             content = ws1.cell(row = i, column = 5).value
             typ,le,ri,c = content.split('|')
@@ -229,6 +259,8 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
             attempt = 0;
             attempt = get_attempt(c,i,ws1)
             ws2.cell(row = r, column = 7).value = attempt
+
+
             
             #check correctness
             if typ == 'incorrect':
@@ -240,6 +272,7 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                 ws2.cell(row = r, column = 10).value = 'CORRECT'
                 correct = True
                 ws2.cell(row = r, column = 14).value = i
+                
 
 
             #look into the input result
@@ -252,27 +285,22 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
             KC_tmp = []
 
 
-            if (len(inp) > len(correct_ans)):
-                correct_ans_tmp = add_distractor(correct_ans, inp, (AnsDict[probname])[1])
-                KC_tmp = add_KC(KC,correct_ans_tmp,KC_distractor, distractors)
-            else:
-                for item in correct_ans:
-                    correct_ans_tmp.append(item)
-                for item in KC:
-                    KC_tmp.append(item)
+            
+            correct_ans_tmp = add_distractor(correct_ans, inp, (AnsDict[probname])[1])
+            KC_tmp = add_KC(KC,correct_ans_tmp,KC_distractor, distractors)
+            
 
-                        
 
-            count_change = 0            
+            count_change = 0
             #when it's first submission
             if(last_attempt == []):
                 for x in range(0, len(inp)):
                     if(correct):#if correct, make len(inp) rows and fill 8th col in with correct
                         ws2.cell(row = r, column = 10).value = 'CORRECT'
                         ws2.cell(row = r, column = 11).value = inp[x]
-                        KClist = (KC[x]).split(",")
+                        KClist = ((KC[x]).split(","))
                         count_change = count_change + len(KClist)
-                        split_KCs(r, r + len(KClist), ws2, KClist, False)
+                        split_KCs(r, r + len(KClist), ws2, KClist, distV)
                         r = r + len(KClist)
                     else:
                         #check all code blocks and find those incorrect 
@@ -280,26 +308,27 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                             ws2.cell(row = r, column = 10).value = 'INCORRECT'
                             ws2.cell(row = r, column = 11).value = inp[x]
                             ws2.cell(row = r, column = 15).value = correct_ans_tmp[x]
-                            KClist = (KC_tmp[x]).split(",")
+                            KClist = ((KC_tmp[x]).split(","))
                             count_change = count_change + len(KClist)
-                            split_KCs(r, r + len(KClist), ws2, KClist, True)
+                            split_KCs(r, r + len(KClist), ws2, KClist,distV)
                             r = r + len(KClist)
                         if (inp[x] != correct_ans_tmp[x]) and ((correct_ans_tmp[x])[0] != 'd') and ((correct_ans_tmp[x])[0] != 'e'):
                             # if the distractor is replace of a correct block (absolute
                             if (inp[x] in correct_ans) and (correct_ans.index(inp[x]) == x):
                                 ws2.cell(row = r, column = 10).value = 'CORRECT'
                                 ws2.cell(row = r, column = 11).value = inp[x]
-                                KClist = (KC[x]).split(",")
+                                KClist = ((KC[x]).split(","))
                                 count_change = count_change + len(KClist)
-                                split_KCs(r, r + len(KClist), ws2, KClist, False)
+                                split_KCs(r, r + len(KClist), ws2, KClist, distV)
                                 r = r + len(KClist)
                             else:
                                 ws2.cell(row = r, column = 10).value = 'INCORRECT'
                                 ws2.cell(row = r, column = 11).value = inp[x]
                                 ws2.cell(row = r, column = 15).value = correct_ans_tmp[x]
-                                KClist = (KC_tmp[x]).split(",")
+                                KC_list = find_corres_KCs(inp[x], probname, AnsDict)
+                                KClist = ((KC_list).split(","))
                                 count_change = count_change + len(KClist)
-                                split_KCs(r, r + len(KClist), ws2, KClist, False)
+                                split_KCs(r, r + len(KClist), ws2, KClist,distV)
                                 r = r + len(KClist)
         
                         #if the distractor is an added extra block to the answer(relative order)
@@ -308,17 +337,17 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                             ws2.cell(row = r, column = 11).value = inp[x]
                             ws2.cell(row = r, column = 6).value = KC_tmp[x]
                             ws2.cell(row = r, column = 12).value = KC_tmp[x]
-                            KClist = (KC_tmp[x]).split(",")
+                            KClist = ((KC_tmp[x]).split(","))
                             count_change = count_change + len(KClist)
-                            split_KCs(r, r + len(KClist), ws2, KClist, False)
+                            split_KCs(r, r + len(KClist), ws2, KClist, distV)
                             r = r + len(KClist)
-                    
-            
+
+                
             #if not first attempt, compare with last attempt to find the different ones, check their correctness
             if last_attempt != []:
                 # find out moves between line of last attempt and current i th line, put in a list to iterate through to check correctness
                 changed = find_changes(last_attempt, inp, probname, i)
-                count_change = len(changed)
+                count_change = 0
                 if changed == []:
                     count_change = 1
                     ws2.cell(row = r, column = 6).value = probname + " empty/unchanged in attempt " + str(attempt)
@@ -331,41 +360,50 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                         ws2.cell(row = r, column = 10).value = 'INCORRECT'
                         ws2.cell(row = r, column = 11).value = inp[idx]
                         ws2.cell(row = r, column = 15).value = correct_ans_tmp[idx]
-                        KClist = (KC_tmp[idx]).split(",")
+                        KClist = ((KC_tmp[idx]).split(","))
                         count_change = count_change + len(KClist)
-                        split_KCs(r, r + len(KClist), ws2, KClist, True)
+                        split_KCs(r, r + len(KClist), ws2, KClist,distV)
                         r = r + len(KClist)
                         
                     if (inp[idx] != correct_ans_tmp[idx]) and ((correct_ans_tmp[idx])[0] != 'd') and ((correct_ans_tmp[idx])[0] != 'e'):
                         if (inp[idx] in correct_ans) and (correct_ans.index(inp[idx]) == idx):
                             ws2.cell(row = r, column = 10).value = 'CORRECT'
                             ws2.cell(row = r, column = 11).value = inp[idx]
-                            KClist = (KC[idx]).split(",")
+                            KClist = ((KC[idx]).split(","))
                             count_change = count_change + len(KClist)
-                            split_KCs(r, r + len(KClist), ws2, KClist, False)
+                            split_KCs(r, r + len(KClist), ws2, KClist,distV)
                             r = r + len(KClist)
+                            
+
                         else:
                             ws2.cell(row = r, column = 10).value = 'INCORRECT'
                             ws2.cell(row = r, column = 11).value = inp[idx]
                             ws2.cell(row = r, column = 15).value = correct_ans_tmp[idx]
-                            KClist = (KC_tmp[idx]).split(",")
+                            KC_list = find_corres_KCs(inp[idx], probname, AnsDict)
+                            KClist = ((KC_list).split(","))
                             count_change = count_change + len(KClist)
-                            split_KCs(r, r + len(KClist), ws2, KClist, False)
+                            split_KCs(r, r + len(KClist), ws2, KClist,distV)
                             r = r + len(KClist)
+
                     if (inp[idx] == correct_ans_tmp[idx]):
                         ws2.cell(row = r, column = 10).value = 'CORRECT'
                         ws2.cell(row = r, column = 11).value = inp[idx]
-                        KClist = (KC_tmp[idx]).split(",")
+                        KClist = ((KC_tmp[idx]).split(","))+KC_missing
                         count_change = count_change + len(KClist)
-                        split_KCs(r, r + len(KClist), ws2, KClist, False)
+                        split_KCs(r, r + len(KClist), ws2, KClist,distV)
                         r = r + len(KClist)
 
-                    
             last_attempt = inp;
             start_r = r - count_change
-            fill_in(ws1, ws2, start_r, r, i, attempt)
-            if(ws1.cell(row = i+1, column = 6).value != ws1.cell(row = i, column = 6).value):
+            curr_r = r
+            add = fill_in(ws1, ws2, start_r, r, i, attempt)
+            r = curr_r + add
+            nxt = 1
+            while ws1.cell(row = i+nxt, column = 2).value != ws1.cell(row = i, column = 2).value:
+                nxt = nxt + 1
+            if(ws1.cell(row = i+nxt, column = 6).value != ws1.cell(row = i, column = 6).value):
                 last_attempt = []
+            
 
     
     out.save(str(output))
@@ -373,7 +411,7 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
 
 
 
-def init(filename, output, filt=[], dismode=True):
+def init(filename, output, filt=[], dismode=True, distV=False):
     source = openpyxl.load_workbook(filename)
     ws1 = source.active
     out = openpyxl.load_workbook(output)
@@ -386,9 +424,9 @@ def init(filename, output, filt=[], dismode=True):
     AnsDict = collect_ans(ws1, AnsDict)
     questions = list(AnsDict.keys())
     if filt == []:
-        data(filename, output, AnsDict, ws1, ws2, out, questions, dismode)
+        data(filename, output, AnsDict, ws1, ws2, out, questions, dismode, distV)
     else:
-        data(filename, output, AnsDict, ws1, ws2, out, filt, dismode)
+        data(filename, output, AnsDict, ws1, ws2, out, filt, dismode, distV)
     df = pd.DataFrame
     
         

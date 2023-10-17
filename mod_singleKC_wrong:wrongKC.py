@@ -14,6 +14,8 @@ global questions;
 
 global empty;
 
+global AnsDict;
+
 
 # check line 291915, 280421
 
@@ -54,7 +56,7 @@ def collect_ans(ws1,AnsDict):
     (AnsDict['Total_Dict_Values_PP'])[1] = ['1','4', '6']
     (AnsDict['exp1_pp3'])[1] = ['1','6']
 
-    #KC (if no corresponding kc, use '' as fill in
+    #KC 
     #Attribute: 
     (AnsDict['exp1_q5_pp'])[2] = ['FunctionDef,args','Assign','For','Assign,get() function,Attribute,args','Assign,get() function,Attribute,args','Assign,BinOp,Add','append() function,Attribute,args','Return']
     (AnsDict['exp1_pp1a'])[2] = ['FunctionDef,args','Assign','While,Comparison Operator < Less than,len() function,args','If Statement,BoolOp,And,Comparison Operator == Equal,Subscript','Return','Assignment Operator +=','Return']
@@ -66,8 +68,8 @@ def collect_ans(ws1,AnsDict):
     (AnsDict['exp1_q5_pp'])[3] = ['Assign,get() function,Attribute,args','Assign,get() function,Attribute,args','Assign,BinOp,Add']
     (AnsDict['exp1_pp1a'])[3] = ['Assign','If Statement,BoolOp,And,Comparison Operator == Equal,Subscript','Return']
     (AnsDict['Count_Target_In_Range_Order'])[3] = ['Assign', 'For,range() function,args,BinOp,Add', 'Assign,Subscript', 'If Statement,Comparison Operator == Equal','Assign,BinOp,Add']
-    (AnsDict['Total_Dict_Values_PP'])[3] = ['unctionDef,args','For', 'Assignment Operator +=, Subscript']
-    (AnsDict['exp1_pp3'])[3] = ['FunctionDef,args','Return,BinOp, Sub']
+    (AnsDict['Total_Dict_Values_PP'])[3] = ['FunctionDef,args','For', 'Assignment Operator +=,Subscript']
+    (AnsDict['exp1_pp3'])[3] = ['FunctionDef,args','Return,BinOp,Sub']
     
     return AnsDict
 
@@ -159,6 +161,16 @@ def add_distractor(ans, curr, distractor):
     return res
 
 
+def find_corres_KCs(block,probname,AnsDict):
+    blockNum = block[0]
+    answer = AnsDict[probname][0]
+    KClist = AnsDict[probname][2]
+    for item in answer:
+        if item[0] == blockNum:
+            i = answer.index(item)
+            KC = KClist[i]
+            return KC
+
 
 def add_KC(initial, ans_tmp, KC_distractor, distractorlist):
     res = []
@@ -186,7 +198,9 @@ def split_KCs(start_r, end_r, ws2, KClist, dist):
             ws2.cell(row = i, column = 6).value = KClist[i-start_r]
         ws2.cell(row = i, column = 12).value = KClist[i-start_r]
     
-    
+
+
+
     
 def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
     global distractor_mode
@@ -297,7 +311,7 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                                 ws2.cell(row = r, column = 10).value = 'INCORRECT'
                                 ws2.cell(row = r, column = 11).value = inp[x]
                                 ws2.cell(row = r, column = 15).value = correct_ans_tmp[x]
-                                KClist = (KC_tmp[x]).split(",")
+                                KClist = (find_corres_KCs(inp[x],probname, AnsDict)).split(",")
                                 count_change = count_change + len(KClist)
                                 split_KCs(r, r + len(KClist), ws2, KClist, False)
                                 r = r + len(KClist)
@@ -348,7 +362,7 @@ def data(filename, output, AnsDict, ws1, ws2, out, filt, dismode=True):
                             ws2.cell(row = r, column = 10).value = 'INCORRECT'
                             ws2.cell(row = r, column = 11).value = inp[idx]
                             ws2.cell(row = r, column = 15).value = correct_ans_tmp[idx]
-                            KClist = (KC_tmp[idx]).split(",")
+                            KClist = (find_corres_KCs(inp[x],probname, AnsDict)).split(",")
                             count_change = count_change + len(KClist)
                             split_KCs(r, r + len(KClist), ws2, KClist, False)
                             r = r + len(KClist)

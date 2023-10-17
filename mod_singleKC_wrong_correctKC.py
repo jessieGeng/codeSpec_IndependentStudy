@@ -66,7 +66,7 @@ def collect_ans(ws1,AnsDict):
     (AnsDict['exp1_q5_pp'])[3] = ['Assign,get() function,Attribute,args','Assign,get() function,Attribute,args','Assign,BinOp,Add']
     (AnsDict['exp1_pp1a'])[3] = ['Assign','If Statement,BoolOp,And,Comparison Operator == Equal,Subscript','Return']
     (AnsDict['Count_Target_In_Range_Order'])[3] = ['Assign', 'For,range() function,args,BinOp,Add', 'Assign,Subscript', 'If Statement,Comparison Operator == Equal','Assign,BinOp,Add']
-    (AnsDict['Total_Dict_Values_PP'])[3] = ['unctionDef,args','For', 'Assignment Operator +=, Subscript']
+    (AnsDict['Total_Dict_Values_PP'])[3] = ['FunctionDef,args','For', 'Assignment Operator +=, Subscript']
     (AnsDict['exp1_pp3'])[3] = ['FunctionDef,args','Return,BinOp, Sub']
     
     return AnsDict
